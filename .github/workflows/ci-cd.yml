@@ -1,0 +1,43 @@
+name: Node.js CI-CD
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the 'main' branch
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' 
+
+      - name: Install dependencies
+        run: npm install 
+
+      - name: Run tests
+        run: npm test 
+
+  deploy:
+    needs: build-and-test 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@master 
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /path/to/your/app # Change to your application directory on the server
+            git pull origin main # Pull latest changes
+            npm install --production # Install production dependencies
+            pm2 restart your-app-name # Restart your application (if using PM2)
